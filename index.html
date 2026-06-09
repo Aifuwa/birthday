@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Birthday Quest</title>
+    <!-- Tailwind CSS for modern responsive layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-serif {
+            font-family: 'Playfair Display', serif;
+        }
+        .font-handwritten {
+            font-family: 'Caveat', cursive;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #feb2b2;
+            border-radius: 4px;
+        }
+        /* Animations */
+        @keyframes float-heart {
+            0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+        .floating-heart {
+            position: fixed;
+            color: #f56565;
+            pointer-events: none;
+            z-index: 10;
+            animation: float-heart linear infinite;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col justify-between overflow-x-hidden selection:bg-rose-200">
+
+    <!-- Ambient background audio -->
+    <audio id="ambient-audio" loop preload="auto"></audio>
+
+    <!-- Floating hearts container -->
+    <div id="hearts-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <main class="flex-grow flex items-center justify-center p-4 max-w-md mx-auto w-full relative z-20">
+        
+        <!-- PASSWORD GATE -->
+        <section id="screen-gate" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-rose-100/50 text-center fade-in">
+            <span class="text-4xl">🔐</span>
+            <h2 class="text-2xl font-serif font-bold mt-4 mb-2">Private Access</h2>
+            <p class="text-xs text-slate-500 mb-6">Enter the secret password to start your journey.</p>
+            <input type="password" id="gate-password" class="w-full px-4 py-3 rounded-xl border border-rose-200 focus:outline-none focus:ring-2 focus:ring-rose-400 text-center text-lg tracking-widest mb-4" placeholder="••••••••">
+            <button onclick="checkPassword()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-semibold rounded-xl shadow-lg transition duration-200">Unlock Quest</button>
+            <p id="gate-error" class="text-red-500 text-xs mt-3 hidden">Incorrect password. Please try again.</p>
+        </section>
+
+        <!-- WELCOME SCREEN -->
+        <section id="screen-landing" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-rose-100/50 text-center hidden fade-in">
+            <h1 class="text-2xl font-serif font-bold text-rose-600 leading-snug whitespace-pre-line" id="landing-title"></h1>
+            <div class="mt-8">
+                <button onclick="startQuest()" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white font-bold tracking-wider rounded-2xl shadow-lg active:scale-95 transition transform">BEGIN THE QUEST</button>
+            </div>
+        </section>
+
+        <!-- STAGE 1: HOW WELL DO YOU KNOW US? -->
+        <section id="screen-stage1" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 hidden fade-in">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-rose-500">Stage 1: How Well Do You Know Us?</span>
+                <span class="text-xs text-slate-400 font-medium" id="quiz-progress-text">1/5</span>
+            </div>
+            <!-- Progress Bar -->
+            <div class="w-full h-2 bg-rose-100 rounded-full overflow-hidden mb-6">
+                <div id="quiz-progress-bar" class="h-full bg-rose-500 transition-all duration-300" style="width: 20%"></div>
+            </div>
+            <h2 class="text-lg font-serif font-bold mb-6 text-slate-800 leading-snug" id="quiz-question"></h2>
+            <div class="space-y-3" id="quiz-options">
+                <!-- Choices display here -->
+            </div>
+            <p id="quiz-feedback" class="text-center text-sm font-medium mt-4 min-h-[20px] text-rose-500 transition-all duration-200"></p>
+        </section>
+
+        <!-- REWARD SCREEN 1 -->
+        <section id="screen-reward1" class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
+            <div id="gift-box-wrapper" class="cursor-pointer py-6" onclick="revealReward1()">
+                <div class="text-7xl animate-bounce">🎁</div>
+                <p class="text-xs text-rose-400 mt-2 font-medium uppercase tracking-wider">Tap the box to open</p>
+            </div>
+            <div id="reward1-content" class="hidden">
+                <h2 class="text-xl font-serif font-bold text-rose-600 mb-2">Congratulations! You’ve unlocked your first surprise 🎁</h2>
+                <p class="text-xs text-slate-500 mb-4" id="gallery-counter-label">Image 1 of 13</p>
+                
+                <!-- Gallery Container -->
+                <div class="relative w-full aspect-square rounded-2xl overflow-hidden shadow-inner bg-slate-100 mb-4" id="gallery-container">
+                    <img id="gallery-img" src="" class="w-full h-full object-cover transition duration-300" alt="Relationship memory">
+                    <button onclick="prevPhoto()" class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-800 p-2.5 rounded-full shadow-md text-xs font-bold select-none">◀</button>
+                    <button onclick="nextPhoto()" class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-slate-800 p-2.5 rounded-full shadow-md text-xs font-bold select-none">▶</button>
+                    <button onclick="toggleFullscreen()" class="absolute bottom-2 right-2 bg-black/55 text-white p-2 rounded-lg text-xs font-semibold backdrop-blur-sm">Full Screen</button>
+                </div>
+
+                <div class="space-y-3">
+                    <a id="gallery-download-link" href="#" target="_blank" download class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Download Current Image</a>
+                    <a id="gallery-drive-folder-link" href="https://drive.google.com/drive/folders/1LbzEXxOaxdph3EwJPkIkrGacz6R2RsGS" target="_blank" class="block w-full py-2.5 text-rose-500 hover:text-rose-600 text-xs font-bold underline">View Full Google Drive Folder</a>
+                    <button onclick="proceedToStage2()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md text-xs uppercase tracking-wider">CONTINUE TO STAGE 2</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- STAGE 2: WORD PUZZLE CHALLENGE -->
+        <section id="screen-stage2" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-rose-100/50 hidden fade-in">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-xs font-semibold uppercase tracking-wider text-rose-500">Stage 2: Word Puzzle Challenge</span>
+                <span class="text-xs text-slate-400 font-medium" id="word-progress-text">0/7 Found</span>
+            </div>
+            <p class="text-xs text-slate-500 text-center mb-3">Tap individual letters to highlight and assemble our special words!</p>
+            
+            <!-- Grid container -->
+            <div id="wordsearch-grid" class="grid grid-cols-10 gap-1 p-2 bg-rose-50/50 rounded-2xl border border-rose-100/80 mb-4 select-none">
+                <!-- 10x10 Grid -->
+            </div>
+
+            <!-- List of search words -->
+            <div class="flex flex-wrap gap-1.5 justify-center py-2" id="word-list-container">
+                <!-- Populated dynamically -->
+            </div>
+
+            <button id="word-next-btn" onclick="goToReward2()" class="w-full py-3 mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md hidden transition text-xs uppercase tracking-wider">Reveal Reward</button>
+        </section>
+
+        <!-- REWARD SCREEN 2 -->
+        <section id="screen-reward2" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
+            <div id="letter-box-wrapper" class="cursor-pointer py-6" onclick="revealReward2()">
+                <div class="text-7xl animate-bounce">💌</div>
+                <p class="text-xs text-rose-400 mt-2 font-medium uppercase tracking-wider">Tap to read letter</p>
+            </div>
+            <div id="reward2-content" class="hidden text-left">
+                <h2 class="text-xl font-serif font-bold text-center text-rose-600 mb-4">Another mystery unlocked ❤️</h2>
+                
+                <!-- Scrollable handwriting template -->
+                <div class="bg-amber-50/60 border border-amber-100 rounded-2xl p-6 max-h-[280px] overflow-y-auto shadow-inner mb-6">
+                    <p id="love-letter-text" class="font-handwritten text-2xl text-slate-800 leading-relaxed whitespace-pre-wrap"></p>
+                </div>
+
+                <button onclick="proceedToStage3()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md text-xs uppercase tracking-wider text-center block transition">CONTINUE TO FINAL STAGE</button>
+            </div>
+        </section>
+
+        <!-- STAGE 3: CHESS PUZZLE (FINAL BOSS BATTLE) -->
+        <section id="screen-stage3" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
+            <span class="text-xs font-semibold uppercase tracking-wider text-rose-500 block mb-1">Stage 3: Final Boss Battle</span>
+            <h2 id="chess-title" class="text-xl font-serif font-bold text-slate-800 mb-1">Chess Challenge</h2>
+            <p id="chess-desc" class="text-xs text-slate-500 mb-4">White to move. Click/Tap your Queen, then click g7 to deliver checkmate!</p>
+
+            <!-- Chessboard -->
+            <div class="aspect-square w-full max-w-[280px] mx-auto bg-amber-50 rounded-lg shadow-md border-2 border-amber-700/30 overflow-hidden grid grid-cols-8 grid-rows-8 relative" id="chessboard">
+                <!-- Pieces generated by JS -->
+            </div>
+
+            <p id="chess-feedback" class="text-xs font-medium mt-3 min-h-[16px] text-rose-500"></p>
+
+            <button id="chess-next-btn" onclick="goToReward3()" class="w-full py-3 mt-4 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md hidden transition text-xs uppercase tracking-wider">Uncover Surprise</button>
+        </section>
+
+        <!-- FINAL REWARD & GRAND FINALE SCREEN -->
+        <section id="screen-finale" class="w-full bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
+            <div id="final-gift-reveal" class="cursor-pointer py-6" onclick="revealGrandFinale()">
+                <h2 class="text-xl font-serif font-bold text-rose-600 mb-4">Your final surprise awaits…</h2>
+                <div class="text-7xl animate-pulse">🎁</div>
+                <button class="mt-6 px-6 py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs uppercase tracking-wider shadow-md">REVEAL MY FINAL PRIZE</button>
+            </div>
+
+            <div id="grand-finale-content" class="hidden">
+                <h2 class="text-xl font-serif font-bold text-rose-600 mb-4">Song Written & Recorded by Me 🎵</h2>
+                
+                <!-- Audio Player Frame -->
+                <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-6">
+                    <div class="flex items-center space-x-4">
+                        <img id="audio-cover" class="w-16 h-16 rounded-xl object-cover shadow-md" src="" alt="Album Cover">
+                        <div class="text-left flex-grow min-w-0">
+                            <p class="font-bold text-sm text-slate-800 truncate" id="audio-title">Special Recording</p>
+                            <p class="text-xs text-rose-500 truncate">Your Girl</p>
+                            <span id="audio-time" class="text-[10px] text-slate-400">0:00</span>
+                        </div>
+                        <button id="play-btn" onclick="toggleSong()" class="w-11 h-11 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition">
+                            <svg id="play-icon" class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="pause-icon" class="w-5 h-5 fill-current hidden" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                    </div>
+                    <!-- Track progress slider -->
+                    <div class="w-full bg-rose-200 h-1.5 rounded-full mt-3 overflow-hidden cursor-pointer" id="track-bar" onclick="seekAudio(event)">
+                        <div id="track-progress" class="bg-rose-500 h-full w-0 transition-all duration-100"></div>
+                    </div>
+                </div>
+
+                <!-- Final message -->
+                <div class="border-t border-rose-100 pt-6 mt-6 text-center">
+                    <p id="grand-finale-text" class="text-sm text-slate-600 leading-relaxed italic whitespace-pre-line"></p>
+                </div>
+
+                <div class="mt-6 space-y-3">
+                    <a id="download-song-link" href="#" download class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Download Song</a>
+                    <button onclick="resetQuest()" class="text-xs text-slate-400 hover:text-slate-600 underline transition duration-200">Replay Journey</button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Canvas for confetti -->
+    <canvas id="canvas-confetti" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+    <footer class="py-4 text-center text-[10px] text-slate-400 relative z-20">
+        Created with Love
+    </footer>
+
+    <!-- CONFIGURATION & ENGINE -->
+    <script>
+        // ==========================================
+        // CONFIGURATION FILE
+        // ==========================================
+        const CONFIG = {
+            password: "sweet", // Enter your secret access password here
+            themeMusic: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Ambient theme background music
+
+            // Landing Screen
+            landing: {
+                title: "Happy Birthday, My Sweetness ❤️",
+                subtitle: "Today isn’t just your birthday.\nIt’s an adventure.\n\nComplete all three stages and unlock three special surprises prepared just for you.\n\nReady🙃?"
+            },
+
+            // Stage 1: MCQ Trivia
+            stage1: {
+                wrongPrompts: [
+                    "Hmm… try again, love😏",
+                    "Noooooobeeeeeliieee😂"
+                ],
+                questions: [
+                    {
+                        question: "What was our first inside phrase?",
+                        correct: "Duetime",
+                        options: ["Duetime", "You’re burning", "“What is inside will not come out”", "“I dare you say”"]
+                    },
+                    {
+                        question: "What was the first thing I ever gave you?",
+                        correct: "Food",
+                        options: ["Food", "A handwritten note", "Earpiece", "A guitar"]
+                    },
+                    {
+                        question: "What was the first compliment I gave you?",
+                        correct: "I love the way you think",
+                        options: ["I love the way you think", "You have a beautiful smile", "You’re incredibly hardworking", "I love your confidence"]
+                    },
+                    {
+                        question: "What is one thing I never want us to lose as a couple?",
+                        correct: "Our value for each other",
+                        options: ["Our value for each other", "Our sense of adventure", "Our prayer time", "Our love"]
+                    },
+                    {
+                        question: "If we were to have a theme song, what would it be?",
+                        correct: "golden hour",
+                        options: ["golden hour", "Little bit better", "Bite the bullet", "Her by Jvke"]
+                    }
+                ]
+            },
+
+            // Stage 1 Reward Surprises (Your 13 Image Links)
+            reward1: {
+                link: "https://drive.google.com/drive/folders/1LbzEXxOaxdph3EwJPkIkrGacz6R2RsGS",
+                photos: [
+                    "https://drive.google.com/file/d/1tXpI_wKDZisoFYW_EPTH7gDwk08RKoId/view?usp=drive_link",
+                    "https://drive.google.com/file/d/11DOH88mjWvg_G346eo6wvhs27O_XlvqK/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1iWMXsoeSVCfHiW7P2abl8QmlFvkh7LEx/view?usp=drive_link",
+                    "https://drive.google.com/file/d/16g-hF8OxVjUtmHeVM2bUox9z5fs5JSkD/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1AT3Fc4spQ7TyUCd9ypVCVY1SQQ8WI-kZ/view?usp=drive_link",
+                    "https://drive.google.com/file/d/18kXX8O6VzcQCqnaZDMCbNXpvUoBXD3gk/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1jDEFpjRoOCgNQ4JMG3XZgVLKn1dN-axi/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1P0Z8t3xvm7RO-nMOVuFHkUD5FERibunS/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1wc1INTxJEkLN88Vv0UZBpRgV2s39Hc1F/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1MljCu0Ezm-OHtTgMGMicbqT0VeZwiap1/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1WsFYFpWXN5czxkhowbS0Uy0GGzRcGDRk/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1YanDuk3RNfN0aPkbFTkQqi8TH0pZSjrc/view?usp=drive_link",
+                    "https://drive.google.com/file/d/1rI9oSC4MJ9i3-6Kki10v2Wf1JlIw-M2C/view?usp=drive_link"
+                ]
+            },
+
+            // Stage 2: Word List
+            stage2: {
+                words: [
+                    "Yobaby",
+                    "sweetness",
+                    "May",
+                    "swallow",
+                    "AGLYG",
+                    "duetime",
+                    "babe"
+                ]
+            },
+
+            // Stage 2 Reward Letter 
+            reward2: {
+                letter: "I’ll send it tomorrow abeg" 
+            },
+
+            // Stage 3: Chess Puzzle 
+            stage3: {
+                puzzleTitle: "Checkmate in One ♟️",
+                puzzleDescription: "White to play. Tap your Queen on g6, then click g7 to complete the challenge!",
+                solution: { from: "g6", to: "g7" }
+            },
+
+            // Stage 3 Final Reward
+            reward3: {
+                audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", 
+                coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
+                title: "My Custom Track for You",
+                grandFinaleText: "Thank you for playing.\n\nEvery question, puzzle, and challenge was made with love.\n\nHappy Birthday ❤️\n\nI love you more than words can put together."
+            }
+        };
+
+        // ==========================================
+        // APPLICATION CONTROLLER STATE
+        // ==========================================
+        let state = {
+            currentStage: "gate",
+            quizIndex: 0,
+            shuffledChoices: [],
+            galleryIndex: 0,
+            foundWords: [],
+            selectedCells: [],
+            chessSelected: null,
+            audioPlaying: false
+        };
+
+        const screens = {
+            gate: document.getElementById("screen-gate"),
+            landing: document.getElementById("screen-landing"),
+            stage1: document.getElementById("screen-stage1"),
+            reward1: document.getElementById("screen-reward1"),
+            stage2: document.getElementById("screen-stage2"),
+            reward2: document.getElementById("screen-reward2"),
+            stage3: document.getElementById("screen-stage3"),
+            finale: document.getElementById("screen-finale")
+        };
+
+        // Initialize App
+        window.addEventListener("DOMContentLoaded", () => {
+            loadProgress();
+            buildHearts();
+            initQuiz();
+            initWordSearch();
+            initChess();
+            initAudio();
+            renderActiveScreen();
+        });
+
+        // Helper to turn standard view links from Google Drive into direct rendering URLs
+        function convertDriveUrl(url) {
+            try {
+                const parts = url.split("/d/");
+                if (parts.length > 1) {
+                    const id = parts[1].split("/")[0];
+                    // Using direct usercontent domain for rendering with bypass parameters
+                    return `https://lh3.googleusercontent.com/d/${id}`;
+                }
+            } catch (e) {
+                console.error("URL parsing error:", e);
+            }
+            return url;
+        }
+
+        function transitionTo(stageName) {
+            state.currentStage = stageName;
+            saveProgress();
+            renderActiveScreen();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function renderActiveScreen() {
+            Object.keys(screens).forEach(key => {
+                if (key === state.currentStage) {
+                    screens[key].classList.remove("hidden");
+                } else {
+                    screens[key].classList.add("hidden");
+                }
+            });
+
+            if (state.currentStage === "landing") {
+                document.getElementById("landing-title").innerText = CONFIG.landing.title;
+            }
+            if (state.currentStage === "reward1") {
+                updateGalleryImage();
+            }
+        }
+
+        function saveProgress() {
+            localStorage.setItem("bq_stage", state.currentStage);
+            localStorage.setItem("bq_quiz_idx", state.quizIndex);
+            localStorage.setItem("bq_found_words", JSON.stringify(state.foundWords));
+        }
+
+        function loadProgress() {
+            const savedStage = localStorage.getItem("bq_stage");
+            const savedQuiz = localStorage.getItem("bq_quiz_idx");
+            const savedWords = localStorage.getItem("bq_found_words");
+
+            if (savedStage && savedStage !== "gate") {
+                state.currentStage = savedStage;
+                if (savedQuiz) state.quizIndex = parseInt(savedQuiz);
+                if (savedWords) state.foundWords = JSON.parse(savedWords);
+            }
+        }
+
+        function resetQuest() {
+            localStorage.clear();
+            state.currentStage = "landing";
+            state.quizIndex = 0;
+            state.foundWords = [];
+            state.selectedCells = [];
+            state.chessSelected = null;
+            if (state.songAudio) {
+                state.songAudio.pause();
+            }
+            state.audioPlaying = false;
+            initQuiz();
+            initWordSearch();
+            initChess();
+            renderActiveScreen();
+        }
+
+        function checkPassword() {
+            const inputVal = document.getElementById("gate-password").value.trim();
+            if (inputVal.toLowerCase() === CONFIG.password.toLowerCase()) {
+                document.getElementById("gate-error").classList.add("hidden");
+                const ambient = document.getElementById("ambient-audio");
+                ambient.src = CONFIG.themeMusic;
+                ambient.play().catch(() => console.log("Ambient Audio delay enabled"));
+                transitionTo("landing");
+            } else {
+                document.getElementById("gate-error").classList.remove("hidden");
+                document.getElementById("screen-gate").classList.add("shake");
+                setTimeout(() => document.getElementById("screen-gate").classList.remove("shake"), 400);
+            }
+        }
+
+        function startQuest() {
+            transitionTo("stage1");
+        }
+
+        // ==========================================
+        // STAGE 1: TRIVIA GAMEPLAY
+        // ==========================================
+        function initQuiz() {
+            if (state.quizIndex >= CONFIG.stage1.questions.length) {
+                state.quizIndex = 0;
+            }
+            showQuizQuestion();
+        }
+
+        function showQuizQuestion() {
+            const q = CONFIG.stage1.questions[state.quizIndex];
+            document.getElementById("quiz-progress-text").innerText = `${state.quizIndex + 1}/${CONFIG.stage1.questions.length}`;
+            
+            const percentage = ((state.quizIndex + 1) / CONFIG.stage1.questions.length) * 100;
+            document.getElementById("quiz-progress-bar").style.width = `${percentage}%`;
+            document.getElementById("quiz-question").innerText = q.question;
+            
+            state.shuffledChoices = [...q.options].sort(() => Math.random() - 0.5);
+
+            const optionsBox = document.getElementById("quiz-options");
+            optionsBox.innerHTML = "";
+            document.getElementById("quiz-feedback").innerText = "";
+
+            state.shuffledChoices.forEach(option => {
+                const btn = document.createElement("button");
+                btn.className = "w-full py-3.5 px-4 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-left rounded-xl text-sm font-medium transition focus:outline-none";
+                btn.innerText = option;
+                btn.onclick = () => verifyQuizChoice(option, btn);
+                optionsBox.appendChild(btn);
+            });
+        }
+
+        function verifyQuizChoice(selected, btnElement) {
+            const q = CONFIG.stage1.questions[state.quizIndex];
+            if (selected === q.correct) {
+                btnElement.classList.remove("bg-white", "border-slate-200");
+                btnElement.classList.add("bg-emerald-500", "text-white", "border-emerald-500");
+                document.getElementById("quiz-feedback").innerText = "Correct! ❤️";
+                document.getElementById("quiz-feedback").className = "text-center text-sm font-bold mt-4 text-emerald-600";
+                
+                setTimeout(() => {
+                    state.quizIndex++;
+                    saveProgress();
+                    if (state.quizIndex < CONFIG.stage1.questions.length) {
+                        showQuizQuestion();
+                    } else {
+                        transitionTo("reward1");
+                    }
+                }, 1000);
+            } else {
+                btnElement.classList.add("shake", "bg-red-500", "text-white", "border-red-500");
+                setTimeout(() => btnElement.classList.remove("shake"), 400);
+
+                const promptOptions = CONFIG.stage1.wrongPrompts;
+                const randomText = promptOptions[Math.floor(Math.random() * promptOptions.length)];
+                document.getElementById("quiz-feedback").innerText = randomText;
+                document.getElementById("quiz-feedback").className = "text-center text-sm font-bold mt-4 text-red-500";
+            }
+        }
+
+        // ==========================================
+        // REWARD SCREEN 1 & PRIVATE GALLERY
+        // ==========================================
+        function revealReward1() {
+            document.getElementById("gift-box-wrapper").classList.add("hidden");
+            document.getElementById("reward1-content").classList.remove("hidden");
+            updateGalleryImage();
+        }
+
+        function updateGalleryImage() {
+            const imagePaths = CONFIG.reward1.photos;
+            if (imagePaths && imagePaths.length > 0) {
+                const originalUrl = imagePaths[state.galleryIndex];
+                const directUrl = convertDriveUrl(originalUrl);
+
+                // Set image source & download targets
+                document.getElementById("gallery-img").src = directUrl;
+                document.getElementById("gallery-download-link").href = directUrl;
+                document.getElementById("gallery-counter-label").innerText = `Image ${state.galleryIndex + 1} of ${imagePaths.length}`;
+            }
+        }
+
+        function prevPhoto() {
+            const list = CONFIG.reward1.photos;
+            state.galleryIndex = (state.galleryIndex - 1 + list.length) % list.length;
+            updateGalleryImage();
+        }
+
+        function nextPhoto() {
+            const list = CONFIG.reward1.photos;
+            state.galleryIndex = (state.galleryIndex + 1) % list.length;
+            updateGalleryImage();
+        }
+
+        function toggleFullscreen() {
+            const container = document.getElementById("gallery-container");
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.error("Fullscreen issue:", err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function proceedToStage2() {
+            transitionTo("stage2");
+        }
+
+        // ==========================================
+        // STAGE 2: WORD PUZZLE CHALLENGE
+        // ==========================================
+        let matrix = [];
+        const dim = 10;
+
+        function initWordSearch() {
+            const container = document.getElementById("wordsearch-grid");
+            container.innerHTML = "";
+
+            // Custom embedded grid populated with exact keywords
+            const rawMap = [
+                ['Y', 'O', 'B', 'A', 'B', 'Y', 'Z', 'X', 'P', 'R'],
+                ['S', 'W', 'E', 'E', 'T', 'N', 'E', 'S', 'S', 'O'],
+                ['D', 'U', 'E', 'T', 'I', 'M', 'E', 'W', 'V', 'K'],
+                ['A', 'G', 'L', 'Y', 'G', 'L', 'Q', 'U', 'R', 'S'],
+                ['S', 'W', 'A', 'L', 'L', 'O', 'W', 'O', 'T', 'N'],
+                ['B', 'A', 'B', 'E', 'Y', 'C', 'X', 'M', 'A', 'Y'],
+                ['K', 'U', 'L', 'T', 'A', 'L', 'E', 'K', 'I', 'P'],
+                ['R', 'Q', 'M', 'N', 'O', 'V', 'Y', 'U', 'X', 'Z'],
+                ['S', 'T', 'W', 'E', 'L', 'I', 'E', 'B', 'A', 'T'],
+                ['H', 'O', 'U', 'S', 'E', 'G', 'G', 'F', 'O', 'D']
+            ];
+
+            matrix = rawMap;
+
+            for (let r = 0; r < dim; r++) {
+                for (let c = 0; c < dim; c++) {
+                    const block = document.createElement("div");
+                    block.className = "aspect-square flex items-center justify-center text-xs font-extrabold bg-white border border-rose-100 rounded-lg cursor-pointer transition select-none active:scale-95";
+                    block.innerText = matrix[r][c];
+                    block.dataset.row = r;
+                    block.dataset.col = c;
+                    
+                    block.onclick = () => wordCellAction(r, c, block);
+                    container.appendChild(block);
+                }
+            }
+            updateWordsList();
+        }
+
+        function updateWordsList() {
+            const listWrapper = document.getElementById("word-list-container");
+            listWrapper.innerHTML = "";
+
+            CONFIG.stage2.words.forEach(originalWord => {
+                const standardized = originalWord.toUpperCase();
+                const matched = state.foundWords.includes(standardized);
+
+                const badge = document.createElement("span");
+                badge.className = `px-2.5 py-1 rounded-full text-[11px] font-bold border transition duration-200 ${
+                    matched ? 'bg-emerald-100 border-emerald-300 text-emerald-700 line-through opacity-60' : 'bg-rose-50 border-rose-200 text-rose-600'
+                }`;
+                badge.innerText = originalWord;
+                listWrapper.appendChild(badge);
+            });
+
+            document.getElementById("word-progress-text").innerText = `${state.foundWords.length}/${CONFIG.stage2.words.length} Found`;
+
+            if (state.foundWords.length === CONFIG.stage2.words.length) {
+                document.getElementById("word-next-btn").classList.remove("hidden");
+            }
+        }
+
+        function wordCellAction(r, c, blockElement) {
+            const lookupIndex = state.selectedCells.findIndex(cell => cell.r === r && cell.c === c);
+
+            if (lookupIndex > -1) {
+                state.selectedCells.splice(lookupIndex, 1);
+                blockElement.classList.remove("bg-rose-500", "text-white");
+                blockElement.classList.add("bg-white");
+            } else {
+                state.selectedCells.push({ r, c, val: matrix[r][c] });
+                blockElement.classList.remove("bg-white");
+                blockElement.classList.add("bg-rose-500", "text-white");
+            }
+
+            const activeString = state.selectedCells.map(cell => cell.val).join("");
+            const invertedString = activeString.split("").reverse().join("");
+
+            CONFIG.stage2.words.forEach(word => {
+                const query = word.toUpperCase();
+                if ((activeString === query || invertedString === query) && !state.foundWords.includes(query)) {
+                    state.foundWords.push(query);
+                    saveProgress();
+                    triggerWordSuccessAnimation();
+                    resetWordHighlights();
+                    updateWordsList();
+                }
+            });
+        }
+
+        function resetWordHighlights() {
+            state.selectedCells = [];
+            const cells = document.querySelectorAll("#wordsearch-grid div");
+            cells.forEach(c => {
+                c.classList.remove("bg-rose-500", "text-white");
+                c.classList.add("bg-white");
+            });
+        }
+
+        function triggerWordSuccessAnimation() {
+            createConfettiStream(20);
+        }
+
+        function goToReward2() {
+            transitionTo("reward2");
+        }
+
+        // ==========================================
+        // REWARD SCREEN 2 & LOVE LETTER
+        // ==========================================
+        function revealReward2() {
+            document.getElementById("letter-box-wrapper").classList.add("hidden");
+            document.getElementById("reward2-content").classList.remove("hidden");
+            
+            const textSource = CONFIG.reward2.letter;
+            const paragraph = document.getElementById("love-letter-text");
+            paragraph.innerText = "";
+            let i = 0;
+
+            function autoTyping() {
+                if (i < textSource.length) {
+                    paragraph.innerText += textSource.charAt(i);
+                    i++;
+                    setTimeout(autoTyping, 35);
+                }
+            }
+            autoTyping();
+        }
+
+        function proceedToStage3() {
+            transitionTo("stage3");
+        }
+
+        // ==========================================
+        // STAGE 3: CHESS PUZZLE CHALLENGE
+        // ==========================================
+        function initChess() {
+            const board = document.getElementById("chessboard");
+            board.innerHTML = "";
+
+            const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+            const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    const id = files[c] + ranks[r];
+                    const square = document.createElement("div");
+                    const isDark = (r + c) % 2 === 1;
+
+                    square.className = `w-full h-full flex items-center justify-center text-2xl select-none cursor-pointer ${
+                        isDark ? 'bg-amber-800 text-amber-100' : 'bg-amber-100 text-amber-800'
+                    }`;
+                    square.dataset.square = id;
+
+                    if (r === 0 && c === 7) {
+                        square.innerHTML = "♚"; 
+                    } else if (r === 1 && c === 6) {
+                        square.innerHTML = "♟"; 
+                    } else if (r === 2 && c === 6) {
+                        square.innerHTML = "♕"; 
+                        square.classList.add("text-rose-500", "animate-pulse");
+                    } else if (r === 4 && c === 2) {
+                        square.innerHTML = "♗"; 
+                    }
+
+                    square.onclick = () => processChessTurn(id, square);
+                    board.appendChild(square);
+                }
+            }
+        }
+
+        function processChessTurn(clickedId, element) {
+            const helpText = document.getElementById("chess-feedback");
+            const keyConfig = CONFIG.stage3.solution;
+
+            if (!state.chessSelected) {
+                if (clickedId === keyConfig.from) {
+                    state.chessSelected = clickedId;
+                    element.classList.add("ring-4", "ring-emerald-400");
+                    helpText.innerText = "Queen selected. Click her target landing square!";
+                    helpText.className = "text-xs font-medium mt-3 text-emerald-600";
+                } else {
+                    helpText.innerText = "That's not your Queen! Select White Queen on g6.";
+                    helpText.className = "text-xs font-medium mt-3 text-rose-500";
+                }
+            } else {
+                if (state.chessSelected === keyConfig.from && clickedId === keyConfig.to) {
+                    helpText.innerText = "You did it. You’ve completed the Birthday Quest ❤️";
+                    helpText.className = "text-xs font-bold mt-3 text-emerald-600";
+                    
+                    document.getElementById("chess-next-btn").classList.remove("hidden");
+                    
+                    const squares = document.querySelectorAll("#chessboard div");
+                    squares.forEach(sq => {
+                        if (sq.dataset.square === keyConfig.from) {
+                            sq.innerHTML = "";
+                        }
+                        if (sq.dataset.square === keyConfig.to) {
+                            sq.innerHTML = "♕";
+                            sq.classList.add("text-rose-600", "animate-bounce");
+                        }
+                        sq.classList.remove("ring-4", "ring-emerald-400");
+                    });
+                } else {
+                    helpText.innerText = "Wrong move. Check the rules and try again.";
+                    helpText.className = "text-xs font-medium mt-3 text-rose-500";
+                    state.chessSelected = null;
+                    initChess();
+                }
+            }
+        }
+
+        function goToReward3() {
+            transitionTo("finale");
+        }
+
+        // ==========================================
+        // GRAND FINALE & AUDIO CONFIG
+        // ==========================================
+        function revealGrandFinale() {
+            document.getElementById("final-gift-reveal").classList.add("hidden");
+            document.getElementById("grand-finale-content").classList.remove("hidden");
+            launchEndEffects();
+        }
+
+        function initAudio() {
+            document.getElementById("audio-cover").src = CONFIG.reward3.coverArt;
+            document.getElementById("audio-title").innerText = CONFIG.reward3.title;
+            document.getElementById("grand-finale-text").innerText = CONFIG.reward3.grandFinaleText;
+            document.getElementById("download-song-link").href = CONFIG.reward3.audioUrl;
+
+            state.songAudio = new Audio(CONFIG.reward3.audioUrl);
+            state.songAudio.addEventListener("timeupdate", () => {
+                const ratio = (state.songAudio.currentTime / state.songAudio.duration) * 100;
+                document.getElementById("track-progress").style.width = `${ratio}%`;
+                
+                const min = Math.floor(state.songAudio.currentTime / 60);
+                const sec = Math.floor(state.songAudio.currentTime % 60).toString().padStart(2, '0');
+                document.getElementById("audio-time").innerText = `${min}:${sec}`;
+            });
+
+            state.songAudio.addEventListener("ended", () => {
+                state.audioPlaying = false;
+                document.getElementById("play-icon").classList.remove("hidden");
+                document.getElementById("pause-icon").classList.add("hidden");
+            });
+        }
+
+        function toggleSong() {
+            document.getElementById("ambient-audio").pause();
+
+            if (!state.songAudio) return;
+
+            if (state.audioPlaying) {
+                state.songAudio.pause();
+                state.audioPlaying = false;
+                document.getElementById("play-icon").classList.remove("hidden");
+                document.getElementById("pause-icon").classList.add("hidden");
+            } else {
+                state.songAudio.play();
+                state.audioPlaying = true;
+                document.getElementById("play-icon").classList.add("hidden");
+                document.getElementById("pause-icon").classList.remove("hidden");
+            }
+        }
+
+        function seekAudio(event) {
+            if (!state.songAudio) return;
+            const bar = document.getElementById("track-bar");
+            const size = bar.getBoundingClientRect();
+            const clickPos = (event.clientX - size.left) / size.width;
+            state.songAudio.currentTime = clickPos * state.songAudio.duration;
+        }
+
+        // ==========================================
+        // VISUAL EFFECTS ENGINE
+        // ==========================================
+        function buildHearts() {
+            const wrapper = document.getElementById("hearts-container");
+            const hearts = ["❤️", "💖", "✨", "🌸"];
+
+            setInterval(() => {
+                if (state.currentStage === "gate") return;
+                const d = document.createElement("div");
+                d.className = "floating-heart text-sm";
+                d.innerText = hearts[Math.floor(Math.random() * hearts.length)];
+                d.style.left = Math.random() * 100 + "vw";
+                d.style.animationDuration = (Math.random() * 3 + 3) + "s";
+                
+                wrapper.appendChild(d);
+                setTimeout(() => d.remove(), 6000);
+            }, 1000);
+        }
+
+        const drawingBoard = document.getElementById("canvas-confetti");
+        const ctx = drawingBoard.getContext("2d");
+        let confettis = [];
+
+        function scaleBoard() {
+            drawingBoard.width = window.innerWidth;
+            drawingBoard.height = window.innerHeight;
+        }
+        window.addEventListener("resize", scaleBoard);
+        scaleBoard();
+
+        function createConfettiStream(qty) {
+            const colors = ["#f56565", "#ed64a6", "#ecc94b", "#4299e1", "#48bb78"];
+            for (let i = 0; i < qty; i++) {
+                confettis.push({
+                    x: Math.random() * drawingBoard.width,
+                    y: Math.random() * drawingBoard.height - drawingBoard.height,
+                    sz: Math.random() * 6 + 4,
+                    clr: colors[Math.floor(Math.random() * colors.length)],
+                    yStep: Math.random() * 3 + 2,
+                    xStep: Math.random() * 2 - 1,
+                    deg: Math.random() * 360,
+                    degSpeed: Math.random() * 4 - 2
+                });
+            }
+        }
+
+        function renderConfettiLoop() {
+            ctx.clearRect(0, 0, drawingBoard.width, drawingBoard.height);
+            confettis.forEach((p, index) => {
+                p.y += p.yStep;
+                p.x += p.xStep;
+                p.deg += p.degSpeed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate((p.deg * Math.PI) / 180);
+                ctx.fillStyle = p.clr;
+                ctx.fillRect(-p.sz / 2, -p.sz / 2, p.sz, p.sz);
+                ctx.restore();
+
+                if (p.y > drawingBoard.height) {
+                    confettis.splice(index, 1);
+                }
+            });
+            requestAnimationFrame(renderConfettiLoop);
+        }
+
+        function launchEndEffects() {
+            createConfettiStream(140);
+            renderConfettiLoop();
+            setInterval(() => {
+                if (state.currentStage === "finale") {
+                    createConfettiStream(8);
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
