@@ -143,9 +143,13 @@
             </div>
             <p class="text-[11px] text-slate-500 text-center mb-3">Find and select the answers to the questions below inside the grid! Tap letters in sequence to select.</p>
             
-            <!-- Grid container -->
-            <div id="wordsearch-grid" class="grid grid-cols-10 gap-1 p-2 bg-rose-50/50 rounded-2xl border border-rose-100/80 mb-4 select-none">
-                <!-- 10x10 Grid -->
+            <!-- Grid container with relative wrapper for SVG highlighter line -->
+            <div class="relative w-full mb-4">
+                <div id="wordsearch-grid" class="grid grid-cols-10 gap-1 p-2 bg-rose-50/50 rounded-2xl border border-rose-100/80 select-none relative z-10">
+                    <!-- 10x10 Grid -->
+                </div>
+                <!-- Absolutely positioned SVG container for drawing connection lines -->
+                <svg id="wordsearch-svg" class="absolute inset-0 pointer-events-none w-full h-full z-20"></svg>
             </div>
 
             <!-- List of search questions with mini-progress tracks -->
@@ -328,7 +332,7 @@
             stage2: {
                 questions: [
                     { key: "YOBABY", text: "q1) My nickname?" },
-                    { key: "SWEETNESS", text: "q2) Your petname?" },
+                    { key: "SWEETNESS", text: "q2) petname?" },
                     { key: "MAY", text: "q3) Anniversary month?" },
                     { key: "SWALLOW", text: "q4) My favourite meal choice?" },
                     { key: "AGLYG", text: "q5) Your favourite song from my library?" },
@@ -463,7 +467,8 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             galleryIndex: 0,
             foundWords: [],
             selectedCells: [],
-            foundCells: [], // Tracks cells successfully belonging to completed words
+            foundCells: [],  // Tracks cells successfully belonging to completed words
+            foundPaths: [],  // Tracks arrays of coordinate arrays for drawing continuous lines
             chessSelected: null,
             audioPlaying: false
         };
@@ -490,6 +495,13 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             initChess();
             initAudio();
             renderActiveScreen();
+        });
+
+        // Trigger continuous line adjustments during window resize
+        window.addEventListener("resize", () => {
+            if (state.currentStage === "stage2") {
+                drawPaths();
+            }
         });
 
         // Safe conversion utility using preview thumbnail endpoint to circumvent browser blocking
@@ -545,6 +557,8 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             if (state.currentStage === "stage2") {
                 playStageMusic("stage2");
                 updateGridCellStyles();
+                // Ensure found paths are rendered immediately on stage load
+                setTimeout(drawPaths, 100); 
             }
             if (state.currentStage === "reward2") {
                 playStageMusic("reward2");
@@ -562,6 +576,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             localStorage.setItem("bq_quiz_idx", state.quizIndex);
             localStorage.setItem("bq_found_words", JSON.stringify(state.foundWords));
             localStorage.setItem("bq_found_cells", JSON.stringify(state.foundCells));
+            localStorage.setItem("bq_found_paths", JSON.stringify(state.foundPaths));
         }
 
         function loadProgress() {
@@ -569,12 +584,14 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             const savedQuiz = localStorage.getItem("bq_quiz_idx");
             const savedWords = localStorage.getItem("bq_found_words");
             const savedCells = localStorage.getItem("bq_found_cells");
+            const savedPaths = localStorage.getItem("bq_found_paths");
 
             if (savedStage && savedStage !== "gate") {
                 state.currentStage = savedStage;
                 if (savedQuiz) state.quizIndex = parseInt(savedQuiz);
                 if (savedWords) state.foundWords = JSON.parse(savedWords);
                 if (savedCells) state.foundCells = JSON.parse(savedCells);
+                if (savedPaths) state.foundPaths = JSON.parse(savedPaths);
             }
         }
 
@@ -584,6 +601,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             state.quizIndex = 0;
             state.foundWords = [];
             state.foundCells = [];
+            state.foundPaths = [];
             state.selectedCells = [];
             state.chessSelected = null;
             if (state.songAudio) {
@@ -689,7 +707,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 const directUrl = convertDriveUrl(originalUrl);
 
                 document.getElementById("gallery-img").src = directUrl;
-                // Points download link directly to original Drive view page to avoid CORS blockades
                 document.getElementById("gallery-download-link").href = originalUrl;
                 document.getElementById("gallery-counter-label").innerText = `Image ${state.galleryIndex + 1} of ${imagePaths.length}`;
             }
@@ -718,10 +735,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             }
         }
 
-        function proceedToStage2() {
-            transitionTo("stage2");
-        }
-
         // ==========================================
         // STAGE 2: HARDCORE WORD SEARCH
         // ==========================================
@@ -735,8 +748,8 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             const rawMap = [
                 ['Y', 'G', 'L', 'Y', 'G', 'A', 'N', 'X', 'P', 'B'],
                 ['S', 'O', 'E', 'E', 'T', 'P', 'E', 'S', 'G', 'A'],
-                ['W', 'U', 'B', 'T', 'I', 'M', 'Q', 'W', 'L', 'B'],
-                ['E', 'E', 'A', 'A', 'G', 'L', 'E', 'A', 'Y', 'E'],
+                ['W', 'U', 'B', 'T', 'I', 'M', 'Q', 'W', 'Y', 'B'],
+                ['E', 'E', 'A', 'A', 'G', 'L', 'E', 'A', 'L', 'E'],
                 ['E', 'M', 'A', 'B', 'B', 'O', 'M', 'L', 'G', 'N'],
                 ['T', 'I', 'A', 'E', 'Y', 'Y', 'I', 'L', 'A', 'Y'],
                 ['N', 'T', 'L', 'Y', 'A', 'X', 'T', 'O', 'I', 'P'],
@@ -777,9 +790,52 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 if (isSelected) {
                     cell.classList.add("bg-rose-500", "text-white", "border-rose-600");
                 } else if (isFound) {
-                    cell.classList.add("bg-rose-50/50", "text-slate-400", "border-rose-100", "line-through", "decoration-rose-500", "decoration-[3px]");
+                    // Soft styling on tiles, the SVG lines will handle the continuous strikethrough drawing
+                    cell.classList.add("bg-rose-50/30", "text-slate-400", "border-rose-100");
                 } else {
                     cell.classList.add("bg-white", "text-slate-800", "border-rose-100");
+                }
+            });
+        }
+
+        // Draws highlighter marker lines across found paths on top of the grid
+        function drawPaths() {
+            const svg = document.getElementById("wordsearch-svg");
+            if (!svg) return;
+            svg.innerHTML = ""; // Clear existing lines
+
+            const grid = document.getElementById("wordsearch-grid");
+            const gridRect = grid.getBoundingClientRect();
+
+            state.foundPaths.forEach(path => {
+                if (path.length < 2) return;
+                const startCell = path[0];
+                const endCell = path[path.length - 1];
+
+                const startEl = document.querySelector(`div[data-row="${startCell.r}"][data-col="${startCell.c}"]`);
+                const endEl = document.querySelector(`div[data-row="${endCell.r}"][data-col="${endCell.c}"]`);
+
+                if (startEl && endEl) {
+                    const startRect = startEl.getBoundingClientRect();
+                    const endRect = endEl.getBoundingClientRect();
+
+                    // Calculate cell positions relative to the grid wrapper
+                    const x1 = startRect.left - gridRect.left + startRect.width / 2;
+                    const y1 = startRect.top - gridRect.top + startRect.height / 2;
+                    const x2 = endRect.left - gridRect.left + endRect.width / 2;
+                    const y2 = endRect.top - gridRect.top + endRect.height / 2;
+
+                    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", x1);
+                    line.setAttribute("y1", y1);
+                    line.setAttribute("x2", x2);
+                    line.setAttribute("y2", y2);
+                    
+                    // Translucent pink highlighter marker strike [3]
+                    line.setAttribute("stroke", "rgba(244, 63, 94, 0.4)"); 
+                    line.setAttribute("stroke-width", startRect.width * 0.45);
+                    line.setAttribute("stroke-linecap", "round");
+                    svg.appendChild(line);
                 }
             });
         }
@@ -836,6 +892,10 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 const query = q.key.toUpperCase();
                 if ((activeString === query || invertedString === query) && !state.foundWords.includes(query)) {
                     state.foundWords.push(query);
+                    
+                    // Archive exact paths for drawing continuous strike lines on the board
+                    state.foundPaths.push([...state.selectedCells]);
+
                     state.selectedCells.forEach(cell => {
                         if (!state.foundCells.some(f => f.r === cell.r && f.c === cell.c)) {
                             state.foundCells.push({ r: cell.r, c: cell.c });
@@ -847,6 +907,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                     state.selectedCells = [];
                     updateGridCellStyles();
                     updateWordsList();
+                    drawPaths(); // Re-render visual paths
                 }
             });
         }
