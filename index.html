@@ -24,6 +24,10 @@
         .font-handwritten {
             font-family: 'Caveat', cursive;
         }
+        /* Strict pointer events bypass to prevent click blocking on mobile browsers [1] */
+        #wordsearch-svg, canvas {
+            pointer-events: none !important;
+        }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 4px;
@@ -141,19 +145,23 @@
                 <span class="text-xs font-semibold uppercase tracking-wider text-rose-500">Stage 2: Word Puzzle Challenge</span>
                 <span class="text-xs text-slate-400 font-medium" id="word-progress-text">0/7 Found</span>
             </div>
-            <p class="text-[11px] text-slate-500 text-center mb-3">Find and select the answers to the questions below inside the grid! Tap letters in sequence to select.</p>
+            <div class="flex justify-between items-center mb-3">
+                <p class="text-[10px] text-slate-500">Tap letters in sequence to select.</p>
+                <!-- Safety net Clear Selection button [3] -->
+                <button onclick="clearWordSelection()" class="text-xs text-rose-500 underline font-semibold hover:text-rose-600 transition">Clear Selection</button>
+            </div>
             
-            <!-- Grid container with relative wrapper for SVG highlighter line -->
+            <!-- Grid container wrapper -->
             <div class="relative w-full mb-4">
                 <div id="wordsearch-grid" class="grid grid-cols-10 gap-1 p-2 bg-rose-50/50 rounded-2xl border border-rose-100/80 select-none relative z-10">
                     <!-- 10x10 Grid -->
                 </div>
-                <!-- Absolutely positioned SVG container for drawing connection lines -->
-                <svg id="wordsearch-svg" class="absolute inset-0 pointer-events-none w-full h-full z-20"></svg>
+                <!-- Absolutely positioned SVG container with reinforced pointer exclusion inline style [1] -->
+                <svg id="wordsearch-svg" class="absolute inset-0 pointer-events-none w-full h-full z-20" style="pointer-events: none !important;"></svg>
             </div>
 
             <!-- List of search questions with mini-progress tracks -->
-            <div class="space-y-3 max-h-[180px] overflow-y-auto pr-1" id="word-questions-container">
+            <div class="space-y-3 max-h-[150px] overflow-y-auto pr-1" id="word-questions-container">
                 <!-- Populated dynamically -->
             </div>
 
@@ -236,7 +244,7 @@
                 </div>
 
                 <div class="mt-6 space-y-3">
-                    <a id="download-song-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Listen & Download on Telegram</a>
+                    <a id="download-song-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Download Song File</a>
                     <button onclick="resetQuest()" class="text-xs text-slate-400 hover:text-slate-600 underline transition duration-200">Replay Journey</button>
                 </div>
             </div>
@@ -245,7 +253,7 @@
     </main>
 
     <!-- Canvas for confetti -->
-    <canvas id="canvas-confetti" class="fixed inset-0 pointer-events-none z-50"></canvas>
+    <canvas id="canvas-confetti" class="fixed inset-0 pointer-events-none z-50" style="pointer-events: none !important;"></canvas>
 
     <footer class="py-4 text-center text-[10px] text-slate-400 relative z-20">
         Created with Love
@@ -399,9 +407,10 @@ I love you, my sweetness😘💋❤️`
 
             // Stage 3 Final Reward
             reward3: {
-                audioFolderUrl: "https://t.me/newgeorge456/2", // Telegram file URL
-                audioFileUrl: "https://t.me/newgeorge456/2", // Telegram fallback
-                coverArt: "https://drive.google.com/file/d/1S2pjsf-TUVySdYo8PA_8lp0hFgCD_t5M/view?usp=sharing", // Direct convertible art link
+                // Pointing to your Dropbox file
+                audioFolderUrl: "https://www.dropbox.com/scl/fi/s0chu9r372k6kzjcsayu0/LOVE-PROJECT-YOLE.mp3?rlkey=z1dkoftdacmmx9moqtg85bd8c&st=10hwvi3i&dl=0", 
+                audioFileUrl: "https://www.dropbox.com/scl/fi/s0chu9r372k6kzjcsayu0/LOVE-PROJECT-YOLE.mp3?rlkey=z1dkoftdacmmx9moqtg85bd8c&st=10hwvi3i&dl=0", 
+                coverArt: "https://drive.google.com/file/d/1S2pjsf-TUVySdYo8PA_8lp0hFgCD_t5M/view?usp=sharing", 
                 grandFinaleText: "Thank you for playing.\n\nEvery question, puzzle, and challenge was made with love.\n\nHappy Birthday ❤️\n\nI love you more than words can put together.",
                 lyrics: `Youre a sachet of myrrh to me
 I’ll spend the night in your arms, darling 
@@ -504,13 +513,18 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             }
         });
 
-        // Safe conversion utility using preview thumbnail endpoint to circumvent browser blocking
+        // Safe conversion utility supporting Drive and automatic Dropbox streaming syntax conversion [2]
         function convertDriveUrl(url) {
             if (!url) return "";
             try {
                 if (url.includes("/folders/")) return url;
                 if (url.includes("t.me")) return url;
                 
+                // Automatically transforms standard Dropbox view links into raw direct audio streams [2]
+                if (url.includes("dropbox.com")) {
+                    return url.replace("dl=0", "raw=1").replace("dl=1", "raw=1");
+                }
+
                 const parts = url.split("/d/");
                 if (parts.length > 1) {
                     const id = parts[1].split("/")[0];
@@ -557,7 +571,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             if (state.currentStage === "stage2") {
                 playStageMusic("stage2");
                 updateGridCellStyles();
-                // Ensure found paths are rendered immediately on stage load
                 setTimeout(drawPaths, 100); 
             }
             if (state.currentStage === "reward2") {
@@ -735,6 +748,10 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             }
         }
 
+        function proceedToStage2() {
+            transitionTo("stage2");
+        }
+
         // ==========================================
         // STAGE 2: HARDCORE WORD SEARCH
         // ==========================================
@@ -790,7 +807,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 if (isSelected) {
                     cell.classList.add("bg-rose-500", "text-white", "border-rose-600");
                 } else if (isFound) {
-                    // Soft styling on tiles, the SVG lines will handle the continuous strikethrough drawing
                     cell.classList.add("bg-rose-50/30", "text-slate-400", "border-rose-100");
                 } else {
                     cell.classList.add("bg-white", "text-slate-800", "border-rose-100");
@@ -798,11 +814,11 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             });
         }
 
-        // Draws highlighter marker lines across found paths on top of the grid
+        // Draw highlighter marker lines across found paths
         function drawPaths() {
             const svg = document.getElementById("wordsearch-svg");
             if (!svg) return;
-            svg.innerHTML = ""; // Clear existing lines
+            svg.innerHTML = ""; 
 
             const grid = document.getElementById("wordsearch-grid");
             const gridRect = grid.getBoundingClientRect();
@@ -819,7 +835,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                     const startRect = startEl.getBoundingClientRect();
                     const endRect = endEl.getBoundingClientRect();
 
-                    // Calculate cell positions relative to the grid wrapper
                     const x1 = startRect.left - gridRect.left + startRect.width / 2;
                     const y1 = startRect.top - gridRect.top + startRect.height / 2;
                     const x2 = endRect.left - gridRect.left + endRect.width / 2;
@@ -831,13 +846,17 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                     line.setAttribute("x2", x2);
                     line.setAttribute("y2", y2);
                     
-                    // Translucent pink highlighter marker strike [3]
                     line.setAttribute("stroke", "rgba(244, 63, 94, 0.4)"); 
                     line.setAttribute("stroke-width", startRect.width * 0.45);
                     line.setAttribute("stroke-linecap", "round");
                     svg.appendChild(line);
                 }
             });
+        }
+
+        function clearWordSelection() {
+            state.selectedCells = [];
+            updateGridCellStyles();
         }
 
         function updateWordsList() {
@@ -892,22 +911,19 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 const query = q.key.toUpperCase();
                 if ((activeString === query || invertedString === query) && !state.foundWords.includes(query)) {
                     state.foundWords.push(query);
-                    
-                    // Archive exact paths for drawing continuous strike lines on the board
-                    state.foundPaths.push([...state.selectedCells]);
-
                     state.selectedCells.forEach(cell => {
                         if (!state.foundCells.some(f => f.r === cell.r && f.c === cell.c)) {
                             state.foundCells.push({ r: cell.r, c: cell.c });
                         }
                     });
                     
+                    state.foundPaths.push([...state.selectedCells]);
                     saveProgress();
                     triggerWordSuccessAnimation();
                     state.selectedCells = [];
                     updateGridCellStyles();
                     updateWordsList();
-                    drawPaths(); // Re-render visual paths
+                    drawPaths(); 
                 }
             });
         }
@@ -1083,7 +1099,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             } else {
                 state.songAudio.play().catch(e => {
                     console.error("Playback restriction:", e);
-                    alert("Since the browser restricts direct playback of Telegram links, please click the direct Telegram button below to listen or download your song!");
+                    alert("Since the browser restricts direct playback of certain external domains, please download your song using the button below if the stream gets blocked.");
                 });
                 state.audioPlaying = true;
                 document.getElementById("play-icon").classList.add("hidden");
