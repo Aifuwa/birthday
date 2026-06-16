@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Birthday Quest</title>
-    <!-- Tailwind CSS for modern responsive layout -->
+    <title>Desmond's Birthday Quest</title>
+    <!-- Tailwind CSS for modern layout -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts for typography -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -33,7 +33,7 @@
             background: #feb2b2;
             border-radius: 4px;
         }
-        /* Animations */
+        /* Page Transition Animations */
         @keyframes float-heart {
             0% { transform: translateY(110vh) scale(0.5); opacity: 0; }
             50% { opacity: 0.8; }
@@ -65,10 +65,10 @@
 </head>
 <body class="h-full text-slate-800 flex flex-col justify-between overflow-x-hidden selection:bg-rose-200">
 
-    <!-- Ambient background audio -->
-    <audio id="ambient-audio" loop preload="auto"></audio>
+    <!-- Audio Player System -->
+    <audio id="stage-audio" loop preload="auto"></audio>
 
-    <!-- Floating hearts container -->
+    <!-- Floating hearts background decoration -->
     <div id="hearts-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden"></div>
 
     <!-- MAIN APP CONTAINER -->
@@ -136,20 +136,20 @@
         </section>
 
         <!-- STAGE 2: WORD PUZZLE CHALLENGE -->
-        <section id="screen-stage2" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-xl border border-rose-100/50 hidden fade-in">
-            <div class="flex justify-between items-center mb-3">
+        <section id="screen-stage2" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-xl border border-rose-100/50 hidden fade-in">
+            <div class="flex justify-between items-center mb-2">
                 <span class="text-xs font-semibold uppercase tracking-wider text-rose-500">Stage 2: Word Puzzle Challenge</span>
                 <span class="text-xs text-slate-400 font-medium" id="word-progress-text">0/7 Found</span>
             </div>
-            <p class="text-xs text-slate-500 text-center mb-3">Tap individual letters to highlight and assemble our special words!</p>
+            <p class="text-[11px] text-slate-500 text-center mb-3">Find and select the answers to the questions below inside the grid! Tap letters in sequence to select.</p>
             
             <!-- Grid container -->
             <div id="wordsearch-grid" class="grid grid-cols-10 gap-1 p-2 bg-rose-50/50 rounded-2xl border border-rose-100/80 mb-4 select-none">
                 <!-- 10x10 Grid -->
             </div>
 
-            <!-- List of search words -->
-            <div class="flex flex-wrap gap-1.5 justify-center py-2" id="word-list-container">
+            <!-- List of search questions with mini-progress tracks -->
+            <div class="space-y-3 max-h-[180px] overflow-y-auto pr-1" id="word-questions-container">
                 <!-- Populated dynamically -->
             </div>
 
@@ -160,14 +160,14 @@
         <section id="screen-reward2" class="w-full bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
             <div id="letter-box-wrapper" class="cursor-pointer py-6" onclick="revealReward2()">
                 <div class="text-7xl animate-bounce">💌</div>
-                <p class="text-xs text-rose-400 mt-2 font-medium uppercase tracking-wider">Tap to read letter</p>
+                <p class="text-xs text-rose-400 mt-2 font-medium uppercase tracking-wider">Tap to read your letter</p>
             </div>
             <div id="reward2-content" class="hidden text-left">
                 <h2 class="text-xl font-serif font-bold text-center text-rose-600 mb-4">Another mystery unlocked ❤️</h2>
                 
                 <!-- Scrollable handwriting template -->
-                <div class="bg-amber-50/60 border border-amber-100 rounded-2xl p-6 max-h-[280px] overflow-y-auto shadow-inner mb-6">
-                    <p id="love-letter-text" class="font-handwritten text-2xl text-slate-800 leading-relaxed whitespace-pre-wrap"></p>
+                <div class="bg-amber-50/60 border border-amber-100 rounded-2xl p-6 max-h-[320px] overflow-y-auto shadow-inner mb-6">
+                    <p id="love-letter-text" class="font-handwritten text-xl text-slate-800 leading-relaxed whitespace-pre-wrap"></p>
                 </div>
 
                 <button onclick="proceedToStage3()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md text-xs uppercase tracking-wider text-center block transition">CONTINUE TO FINAL STAGE</button>
@@ -178,7 +178,7 @@
         <section id="screen-stage3" class="w-full bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-rose-100/50 text-center hidden fade-in">
             <span class="text-xs font-semibold uppercase tracking-wider text-rose-500 block mb-1">Stage 3: Final Boss Battle</span>
             <h2 id="chess-title" class="text-xl font-serif font-bold text-slate-800 mb-1">Chess Challenge</h2>
-            <p id="chess-desc" class="text-xs text-slate-500 mb-4">White to move. Click/Tap your Queen, then click g7 to deliver checkmate!</p>
+            <p id="chess-desc" class="text-xs text-slate-500 mb-4">White to move. Click/Tap your Queen on g6, then click g7 to deliver checkmate!</p>
 
             <!-- Chessboard -->
             <div class="aspect-square w-full max-w-[280px] mx-auto bg-amber-50 rounded-lg shadow-md border-2 border-amber-700/30 overflow-hidden grid grid-cols-8 grid-rows-8 relative" id="chessboard">
@@ -199,15 +199,15 @@
             </div>
 
             <div id="grand-finale-content" class="hidden">
-                <h2 class="text-xl font-serif font-bold text-rose-600 mb-4">Song Written & Recorded by Me 🎵</h2>
+                <h2 class="text-xl font-serif font-bold text-rose-600 mb-1">My Song For You 🎵</h2>
                 
                 <!-- Audio Player Frame -->
-                <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-6">
+                <div class="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-4">
                     <div class="flex items-center space-x-4">
-                        <img id="audio-cover" class="w-16 h-16 rounded-xl object-cover shadow-md" src="" alt="Album Cover">
+                        <img id="audio-cover" class="w-16 h-16 rounded-xl object-cover shadow-md border border-rose-200" src="" alt="Album Cover">
                         <div class="text-left flex-grow min-w-0">
-                            <p class="font-bold text-sm text-slate-800 truncate" id="audio-title">Special Recording</p>
-                            <p class="text-xs text-rose-500 truncate">Your Girl</p>
+                            <p class="font-bold text-sm text-slate-800 truncate">Song Recorded by Me</p>
+                            <p class="text-xs text-rose-500 truncate">Desmond's Gift</p>
                             <span id="audio-time" class="text-[10px] text-slate-400">0:00</span>
                         </div>
                         <button id="play-btn" onclick="toggleSong()" class="w-11 h-11 bg-rose-500 hover:bg-rose-600 text-white rounded-full flex items-center justify-center shadow-md active:scale-95 transition">
@@ -221,13 +221,18 @@
                     </div>
                 </div>
 
+                <!-- Song Lyrics Container -->
+                <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 max-h-[160px] overflow-y-auto mb-6 text-center text-xs text-slate-700 leading-relaxed italic whitespace-pre-wrap">
+                    <p id="song-lyrics"></p>
+                </div>
+
                 <!-- Final message -->
                 <div class="border-t border-rose-100 pt-6 mt-6 text-center">
                     <p id="grand-finale-text" class="text-sm text-slate-600 leading-relaxed italic whitespace-pre-line"></p>
                 </div>
 
                 <div class="mt-6 space-y-3">
-                    <a id="download-song-link" href="#" download class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Download Song</a>
+                    <a id="download-song-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Open Audio Folder & Download</a>
                     <button onclick="resetQuest()" class="text-xs text-slate-400 hover:text-slate-600 underline transition duration-200">Replay Journey</button>
                 </div>
             </div>
@@ -248,8 +253,15 @@
         // CONFIGURATION FILE
         // ==========================================
         const CONFIG = {
-            password: "sweet", // Enter your secret access password here
-            themeMusic: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Ambient theme background music
+            password: "sweet", // Secret access password
+
+            // Stage Music Backdrops
+            audioTracks: {
+                stage1: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", // daniel caesar / h.e.r "best part"
+                stage2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // golden hour violin instrumentals
+                stage3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", // jvke "her" instrumentals
+                reward2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // golden hour violin instrumentals
+            },
 
             // Landing Screen
             landing: {
@@ -312,37 +324,132 @@
                 ]
             },
 
-            // Stage 2: Word List
+            // Stage 2: Word List Configured into Advanced Hint Questions
             stage2: {
-                words: [
-                    "Yobaby",
-                    "sweetness",
-                    "May",
-                    "swallow",
-                    "AGLYG",
-                    "duetime",
-                    "babe"
+                questions: [
+                    { key: "YOBABY", text: "q1) My nickname?" },
+                    { key: "SWEETNESS", text: "q2) petname?" },
+                    { key: "MAY", text: "q3) Anniversary month?" },
+                    { key: "SWALLOW", text: "q4) My favourite meal choice?" },
+                    { key: "AGLYG", text: "q5) Your favourite song from my library?" },
+                    { key: "DUETIME", text: "q6) Our most used word?" },
+                    { key: "BABE", text: "q7) a name we don't call ourselves?" }
                 ]
             },
 
             // Stage 2 Reward Letter 
             reward2: {
-                letter: "I’ll send it tomorrow abeg" 
+                letter: `My heart is captivated in a way I cannot fully explain.
+This feeling is unlike anything I have known before.
+My mind is calm, but my heartbeat speaks loudly.
+They say love is blind, but how come I can see so clearly since you walked by my side
+Every moment spent with you has become something I deeply treasure so much.
+Gazing at you has become a hobby I enjoy, and even when you are not watching, my eyes just have a way of stealing glances at you.
+There is joy in my spirit and gladness in my heart whenever I think of you.
+I cannot imagine doing this with another.
+My heart feels like it has found its muse, and its longing has revived.
+Now I simply want to love you rightly, sincerely, and with intention.
+Thankfully this love wasn't birthed  out of lust and i'm confident in this because I had to first love Christ before I could love you.
+
+In a world where love often feels self-centered and fragile, I choose something different........
+A love that is genuine, steady, and held with reverence.
+I tried to put into words what my heart carries, but I’ve realized words can only stretch so far.
+So whenever you can, remember this: there is someone who truly cares,
+One whose voice counts for a thousand 
+Someone who is quietly rooting for you and cheering you on.
+
+Your words make my heart leap in ways I don’t expect.
+So if this is not love, then I wonder what love is.
+You are selfless, and I deeply admire that.
+Humility is rare, yet I continue to be amazed by what I see in you.
+You genuinely light up my world.
+So cheers to more beautiful memories.
+To a love that is rooted in Christ.
+And with that, I add my voice to the many who speak goodness and life over you.
+
+I pray for grace and mercy from Heaven’s throne for you
+I pray for light and understanding of Gods will for you
+I pray for strength to be everything you are been called to
+I pray for tenacity and doggedness in pursuit 
+I pray for wisdom from Heaven’s throne in hard times and difficult situations 
+I pray for love, true love and friendship in more people that will out last you and bless your generations after you
+I pray fi heightened value in the eyes of those who matter to your life and destiny 
+I pray for health and vitality to enjoy your inheritance in Christ 
+I pray for the grace for Fatherhood and the enablement of Heaven to carry your home
+I pray for grace to follow your Prophet truly and honour sincerely 
+I pray for a deeper walk with God that draws you closer to Him
+I pray for the healing anointing on your life to come to full actualisation 
+I pray for boldness to run with what God lays in your heart per time without fear of the scourge of the tongue
+I pray for a long and fulfilled life with your wife by your side, your children and their children and their children surrounding your table
+
+ATOHENGBE IWINOSA DESMOND
+I love you, my sweetness😘💋❤️`
             },
 
             // Stage 3: Chess Puzzle 
             stage3: {
-                puzzleTitle: "Checkmate in One ♟️",
-                puzzleDescription: "White to play. Tap your Queen on g6, then click g7 to complete the challenge!",
+                puzzleTitle: "Chess Challenge",
+                puzzleDescription: "White to play. Tap your Queen on g6, then click g7 to deliver checkmate!",
                 solution: { from: "g6", to: "g7" }
             },
 
             // Stage 3 Final Reward
             reward3: {
-                audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", 
-                coverArt: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?q=80&w=600&auto=format&fit=crop",
-                title: "My Custom Track for You",
-                grandFinaleText: "Thank you for playing.\n\nEvery question, puzzle, and challenge was made with love.\n\nHappy Birthday ❤️\n\nI love you more than words can put together."
+                audioFolderUrl: "https://drive.google.com/drive/folders/1b1plr2eB64uzxXd9ZvKTZ1wl-Po20-U3", 
+                audioFileUrl: "https://docs.google.com/uc?export=download&id=1b1plr2eB64uzxXd9ZvKTZ1wl-Po20-U3", // Folder fallback 
+                coverArt: "https://lh3.googleusercontent.com/d/1S2pjsf-TUVySdYo8PA_8lp0hFgCD_t5M",
+                grandFinaleText: "Thank you for playing.\n\nEvery question, puzzle, and challenge was made with love.\n\nHappy Birthday ❤️\n\nI love you more than words can put together.",
+                lyrics: `Youre a sachet of myrrh to me
+I’ll spend the night in your arms, darling 
+I see love when you’re looking at me
+Heaven knows that you’re mine
+
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+
+In my slumber my heart wakes for you
+I hear the sound of my love knocking 
+Let my fragrance be your delight 
+I am yours and you’re mine 
+
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+I ain’t gonna let you go
+
+
+Yeah
+
+Love, when you came around, you changed the whole timing,
+Now every second with you feels like perfect aligning,
+They say love’s a gamble, but with you I’m still winning,
+Got me counting our blessings while the world’s still spinning.
+
+Darling, you’re the headline, every other thing’s the side note,
+You got a permanent address in my heart, that’s the postcode,
+And I ain’t talking deadlines when I mention Duetime,
+’Cause every time is due time when your hand is in mine.
+
+Sweetness, got me sugarcoated, no weakness,
+You turn ordinary moments into something deepest,
+If forever had a face, it’d probably look like us,
+Built on trust, not luck, that’s a different kind of love.
+
+Infinity’s the minimum, I’m thinking way beyond,
+Like a melody that lingers after every single song,
+No exit plan, no goodbye, no releasing,
+My love for you keeps multiplying, never decreasing.
+
+They say nothing lasts forever, I don’t buy that,
+Got a future full of memories and we’re writing right back,
+So if life’s a journey, then you’re where my road leads,
+And love, I’m holding on to you like my heart’s own heartbeat.`
             }
         };
 
@@ -371,6 +478,8 @@
             finale: document.getElementById("screen-finale")
         };
 
+        const globalAudio = document.getElementById("stage-audio");
+
         // Initialize App
         window.addEventListener("DOMContentLoaded", () => {
             loadProgress();
@@ -382,13 +491,19 @@
             renderActiveScreen();
         });
 
-        // Helper to turn standard view links from Google Drive into direct rendering URLs
+        function playStageMusic(trackKey) {
+            const src = CONFIG.audioTracks[trackKey];
+            if (src && globalAudio.src !== src) {
+                globalAudio.src = src;
+                globalAudio.play().catch(e => console.log("Audio playback deferred."));
+            }
+        }
+
         function convertDriveUrl(url) {
             try {
                 const parts = url.split("/d/");
                 if (parts.length > 1) {
                     const id = parts[1].split("/")[0];
-                    // Using direct usercontent domain for rendering with bypass parameters
                     return `https://lh3.googleusercontent.com/d/${id}`;
                 }
             } catch (e) {
@@ -415,6 +530,18 @@
 
             if (state.currentStage === "landing") {
                 document.getElementById("landing-title").innerText = CONFIG.landing.title;
+            }
+            if (state.currentStage === "stage1") {
+                playStageMusic("stage1");
+            }
+            if (state.currentStage === "stage2") {
+                playStageMusic("stage2");
+            }
+            if (state.currentStage === "reward2") {
+                playStageMusic("reward2");
+            }
+            if (state.currentStage === "stage3") {
+                playStageMusic("stage3");
             }
             if (state.currentStage === "reward1") {
                 updateGalleryImage();
@@ -460,9 +587,6 @@
             const inputVal = document.getElementById("gate-password").value.trim();
             if (inputVal.toLowerCase() === CONFIG.password.toLowerCase()) {
                 document.getElementById("gate-error").classList.add("hidden");
-                const ambient = document.getElementById("ambient-audio");
-                ambient.src = CONFIG.themeMusic;
-                ambient.play().catch(() => console.log("Ambient Audio delay enabled"));
                 transitionTo("landing");
             } else {
                 document.getElementById("gate-error").classList.remove("hidden");
@@ -551,7 +675,6 @@
                 const originalUrl = imagePaths[state.galleryIndex];
                 const directUrl = convertDriveUrl(originalUrl);
 
-                // Set image source & download targets
                 document.getElementById("gallery-img").src = directUrl;
                 document.getElementById("gallery-download-link").href = directUrl;
                 document.getElementById("gallery-counter-label").innerText = `Image ${state.galleryIndex + 1} of ${imagePaths.length}`;
@@ -564,6 +687,7 @@
             updateGalleryImage();
         }
 
+        // Preload next image to keep transitions smooth
         function nextPhoto() {
             const list = CONFIG.reward1.photos;
             state.galleryIndex = (state.galleryIndex + 1) % list.length;
@@ -574,7 +698,7 @@
             const container = document.getElementById("gallery-container");
             if (!document.fullscreenElement) {
                 container.requestFullscreen().catch(err => {
-                    console.error("Fullscreen issue:", err);
+                    console.error("Fullscreen system failure:", err);
                 });
             } else {
                 document.exitFullscreen();
@@ -586,7 +710,7 @@
         }
 
         // ==========================================
-        // STAGE 2: WORD PUZZLE CHALLENGE
+        // STAGE 2: HARDCORE WORD SEARCH
         // ==========================================
         let matrix = [];
         const dim = 10;
@@ -595,18 +719,18 @@
             const container = document.getElementById("wordsearch-grid");
             container.innerHTML = "";
 
-            // Custom embedded grid populated with exact keywords
+            // Custom multi-directional grid with diagonal/backwards paths
             const rawMap = [
-                ['Y', 'O', 'B', 'A', 'B', 'Y', 'Z', 'X', 'P', 'R'],
-                ['S', 'W', 'E', 'E', 'T', 'N', 'E', 'S', 'S', 'O'],
-                ['D', 'U', 'E', 'T', 'I', 'M', 'E', 'W', 'V', 'K'],
-                ['A', 'G', 'L', 'Y', 'G', 'L', 'Q', 'U', 'R', 'S'],
-                ['S', 'W', 'A', 'L', 'L', 'O', 'W', 'O', 'T', 'N'],
-                ['B', 'A', 'B', 'E', 'Y', 'C', 'X', 'M', 'A', 'Y'],
-                ['K', 'U', 'L', 'T', 'A', 'L', 'E', 'K', 'I', 'P'],
-                ['R', 'Q', 'M', 'N', 'O', 'V', 'Y', 'U', 'X', 'Z'],
-                ['S', 'T', 'W', 'E', 'L', 'I', 'E', 'B', 'A', 'T'],
-                ['H', 'O', 'U', 'S', 'E', 'G', 'G', 'F', 'O', 'D']
+                ['Y', 'G', 'L', 'Y', 'G', 'A', 'N', 'X', 'P', 'R'],
+                ['S', 'O', 'E', 'E', 'T', 'N', 'E', 'S', 'S', 'O'],
+                ['W', 'U', 'B', 'T', 'I', 'M', 'E', 'W', 'V', 'K'],
+                ['E', 'G', 'A', 'A', 'G', 'L', 'Q', 'U', 'R', 'S'],
+                ['E', 'W', 'A', 'B', 'L', 'O', 'W', 'O', 'T', 'N'],
+                ['T', 'A', 'R', 'E', 'Y', 'E', 'X', 'M', 'A', 'Y'],
+                ['N', 'O', 'L', 'M', 'A', 'X', 'E', 'K', 'I', 'P'],
+                ['E', 'Q', 'M', 'E', 'O', 'V', 'Y', 'U', 'X', 'Z'],
+                ['S', 'T', 'W', 'E', 'U', 'I', 'E', 'B', 'A', 'T'],
+                ['S', 'D', 'U', 'E', 'T', 'I', 'M', 'E', 'O', 'D']
             ];
 
             matrix = rawMap;
@@ -627,24 +751,35 @@
         }
 
         function updateWordsList() {
-            const listWrapper = document.getElementById("word-list-container");
+            const listWrapper = document.getElementById("word-questions-container");
             listWrapper.innerHTML = "";
 
-            CONFIG.stage2.words.forEach(originalWord => {
-                const standardized = originalWord.toUpperCase();
-                const matched = state.foundWords.includes(standardized);
+            CONFIG.stage2.questions.forEach((q, idx) => {
+                const targetKey = q.key.toUpperCase();
+                const matched = state.foundWords.includes(targetKey);
 
-                const badge = document.createElement("span");
-                badge.className = `px-2.5 py-1 rounded-full text-[11px] font-bold border transition duration-200 ${
-                    matched ? 'bg-emerald-100 border-emerald-300 text-emerald-700 line-through opacity-60' : 'bg-rose-50 border-rose-200 text-rose-600'
-                }`;
-                badge.innerText = originalWord;
-                listWrapper.appendChild(badge);
+                const qBox = document.createElement("div");
+                qBox.className = "space-y-1";
+
+                const header = document.createElement("div");
+                header.className = "flex justify-between items-center text-xs font-semibold text-slate-700";
+                header.innerHTML = `<span>${q.text}</span> <span class="${matched ? 'text-emerald-500' : 'text-slate-400'}">${matched ? 'Found!' : 'Searching...'}</span>`;
+
+                const pBarBg = document.createElement("div");
+                pBarBg.className = "w-full h-1.5 bg-slate-100 rounded-full overflow-hidden";
+
+                const pBarValue = document.createElement("div");
+                pBarValue.className = `h-full rounded-full transition-all duration-300 ${matched ? 'bg-emerald-500 w-full' : 'bg-rose-400 w-0'}`;
+
+                pBarBg.appendChild(pBarValue);
+                qBox.appendChild(header);
+                qBox.appendChild(pBarBg);
+                listWrapper.appendChild(qBox);
             });
 
-            document.getElementById("word-progress-text").innerText = `${state.foundWords.length}/${CONFIG.stage2.words.length} Found`;
+            document.getElementById("word-progress-text").innerText = `${state.foundWords.length}/${CONFIG.stage2.questions.length} Found`;
 
-            if (state.foundWords.length === CONFIG.stage2.words.length) {
+            if (state.foundWords.length === CONFIG.stage2.questions.length) {
                 document.getElementById("word-next-btn").classList.remove("hidden");
             }
         }
@@ -665,8 +800,8 @@
             const activeString = state.selectedCells.map(cell => cell.val).join("");
             const invertedString = activeString.split("").reverse().join("");
 
-            CONFIG.stage2.words.forEach(word => {
-                const query = word.toUpperCase();
+            CONFIG.stage2.questions.forEach(q => {
+                const query = q.key.toUpperCase();
                 if ((activeString === query || invertedString === query) && !state.foundWords.includes(query)) {
                     state.foundWords.push(query);
                     saveProgress();
@@ -710,7 +845,7 @@
                 if (i < textSource.length) {
                     paragraph.innerText += textSource.charAt(i);
                     i++;
-                    setTimeout(autoTyping, 35);
+                    setTimeout(autoTyping, 20); // Faster pace to accommodate the longer letter
                 }
             }
             autoTyping();
@@ -814,11 +949,11 @@
 
         function initAudio() {
             document.getElementById("audio-cover").src = CONFIG.reward3.coverArt;
-            document.getElementById("audio-title").innerText = CONFIG.reward3.title;
+            document.getElementById("song-lyrics").innerText = CONFIG.reward3.lyrics;
             document.getElementById("grand-finale-text").innerText = CONFIG.reward3.grandFinaleText;
-            document.getElementById("download-song-link").href = CONFIG.reward3.audioUrl;
+            document.getElementById("download-song-link").href = CONFIG.reward3.audioFolderUrl;
 
-            state.songAudio = new Audio(CONFIG.reward3.audioUrl);
+            state.songAudio = new Audio(CONFIG.reward3.audioFileUrl);
             state.songAudio.addEventListener("timeupdate", () => {
                 const ratio = (state.songAudio.currentTime / state.songAudio.duration) * 100;
                 document.getElementById("track-progress").style.width = `${ratio}%`;
@@ -836,7 +971,7 @@
         }
 
         function toggleSong() {
-            document.getElementById("ambient-audio").pause();
+            globalAudio.pause(); // Mute background loops
 
             if (!state.songAudio) return;
 
