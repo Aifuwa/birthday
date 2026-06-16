@@ -128,7 +128,7 @@
                 </div>
 
                 <div class="space-y-3">
-                    <a id="gallery-download-link" href="#" target="_blank" download class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Download Current Image</a>
+                    <a id="gallery-download-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">View / Download Original File</a>
                     <a id="gallery-drive-folder-link" href="https://drive.google.com/drive/folders/1LbzEXxOaxdph3EwJPkIkrGacz6R2RsGS" target="_blank" class="block w-full py-2.5 text-rose-500 hover:text-rose-600 text-xs font-bold underline">View Full Google Drive Folder</a>
                     <button onclick="proceedToStage2()" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-md text-xs uppercase tracking-wider">CONTINUE TO STAGE 2</button>
                 </div>
@@ -232,7 +232,7 @@
                 </div>
 
                 <div class="mt-6 space-y-3">
-                    <a id="download-song-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Open Audio Folder & Download</a>
+                    <a id="download-song-link" href="#" target="_blank" class="block w-full py-3 bg-rose-100 hover:bg-rose-200 text-rose-700 font-semibold rounded-xl text-xs transition uppercase tracking-wider">Listen & Download on Telegram</a>
                     <button onclick="resetQuest()" class="text-xs text-slate-400 hover:text-slate-600 underline transition duration-200">Replay Journey</button>
                 </div>
             </div>
@@ -257,10 +257,10 @@
 
             // Stage Music Backdrops
             audioTracks: {
-                stage1: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", // daniel caesar / h.e.r "best part"
-                stage2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // golden hour violin instrumentals
-                stage3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", // jvke "her" instrumentals
-                reward2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // golden hour violin instrumentals
+                stage1: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", // "Best Part" by Daniel Caesar
+                stage2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // "Golden Hour" Violin instrumental
+                stage3: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", // "Her" by JVKE instrumental
+                reward2: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" // "Golden Hour" Violin instrumental
             },
 
             // Landing Screen
@@ -384,7 +384,7 @@ I pray for a long and fulfilled life with your wife by your side, your children 
 
 ATOHENGBE IWINOSA DESMOND
 I love you, my sweetness😘💋❤️`
-            },
+},
 
             // Stage 3: Chess Puzzle 
             stage3: {
@@ -395,9 +395,9 @@ I love you, my sweetness😘💋❤️`
 
             // Stage 3 Final Reward
             reward3: {
-                audioFolderUrl: "https://drive.google.com/drive/folders/1b1plr2eB64uzxXd9ZvKTZ1wl-Po20-U3", 
-                audioFileUrl: "https://docs.google.com/uc?export=download&id=1b1plr2eB64uzxXd9ZvKTZ1wl-Po20-U3", // Folder fallback 
-                coverArt: "https://lh3.googleusercontent.com/d/1S2pjsf-TUVySdYo8PA_8lp0hFgCD_t5M",
+                audioFolderUrl: "https://t.me/newgeorge456/2", // Telegram file URL
+                audioFileUrl: "https://t.me/newgeorge456/2", // Telegram fallback
+                coverArt: "https://drive.google.com/file/d/1S2pjsf-TUVySdYo8PA_8lp0hFgCD_t5M/view?usp=sharing", // Direct convertible art link
                 grandFinaleText: "Thank you for playing.\n\nEvery question, puzzle, and challenge was made with love.\n\nHappy Birthday ❤️\n\nI love you more than words can put together.",
                 lyrics: `Youre a sachet of myrrh to me
 I’ll spend the night in your arms, darling 
@@ -463,6 +463,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             galleryIndex: 0,
             foundWords: [],
             selectedCells: [],
+            foundCells: [], // Tracks cells successfully belonging to completed words
             chessSelected: null,
             audioPlaying: false
         };
@@ -491,25 +492,32 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             renderActiveScreen();
         });
 
-        function playStageMusic(trackKey) {
-            const src = CONFIG.audioTracks[trackKey];
-            if (src && globalAudio.src !== src) {
-                globalAudio.src = src;
-                globalAudio.play().catch(e => console.log("Audio playback deferred."));
-            }
-        }
-
+        // Safe conversion utility using preview thumbnail endpoint to circumvent browser blocking
         function convertDriveUrl(url) {
+            if (!url) return "";
             try {
+                if (url.includes("/folders/")) return url;
+                if (url.includes("t.me")) return url;
+                
                 const parts = url.split("/d/");
                 if (parts.length > 1) {
                     const id = parts[1].split("/")[0];
-                    return `https://lh3.googleusercontent.com/d/${id}`;
+                    return `https://drive.google.com/thumbnail?id=${id}&sz=w1200`;
                 }
             } catch (e) {
                 console.error("URL parsing error:", e);
             }
             return url;
+        }
+
+        function playStageMusic(trackKey) {
+            const rawUrl = CONFIG.audioTracks[trackKey];
+            const directUrl = convertDriveUrl(rawUrl);
+            
+            if (directUrl && globalAudio.src !== directUrl) {
+                globalAudio.src = directUrl;
+                globalAudio.play().catch(e => console.log("Audio playback deferred pending click."));
+            }
         }
 
         function transitionTo(stageName) {
@@ -536,6 +544,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             }
             if (state.currentStage === "stage2") {
                 playStageMusic("stage2");
+                updateGridCellStyles();
             }
             if (state.currentStage === "reward2") {
                 playStageMusic("reward2");
@@ -552,17 +561,20 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             localStorage.setItem("bq_stage", state.currentStage);
             localStorage.setItem("bq_quiz_idx", state.quizIndex);
             localStorage.setItem("bq_found_words", JSON.stringify(state.foundWords));
+            localStorage.setItem("bq_found_cells", JSON.stringify(state.foundCells));
         }
 
         function loadProgress() {
             const savedStage = localStorage.getItem("bq_stage");
             const savedQuiz = localStorage.getItem("bq_quiz_idx");
             const savedWords = localStorage.getItem("bq_found_words");
+            const savedCells = localStorage.getItem("bq_found_cells");
 
             if (savedStage && savedStage !== "gate") {
                 state.currentStage = savedStage;
                 if (savedQuiz) state.quizIndex = parseInt(savedQuiz);
                 if (savedWords) state.foundWords = JSON.parse(savedWords);
+                if (savedCells) state.foundCells = JSON.parse(savedCells);
             }
         }
 
@@ -571,6 +583,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             state.currentStage = "landing";
             state.quizIndex = 0;
             state.foundWords = [];
+            state.foundCells = [];
             state.selectedCells = [];
             state.chessSelected = null;
             if (state.songAudio) {
@@ -676,7 +689,8 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 const directUrl = convertDriveUrl(originalUrl);
 
                 document.getElementById("gallery-img").src = directUrl;
-                document.getElementById("gallery-download-link").href = directUrl;
+                // Points download link directly to original Drive view page to avoid CORS blockades
+                document.getElementById("gallery-download-link").href = originalUrl;
                 document.getElementById("gallery-counter-label").innerText = `Image ${state.galleryIndex + 1} of ${imagePaths.length}`;
             }
         }
@@ -687,7 +701,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             updateGalleryImage();
         }
 
-        // Preload next image to keep transitions smooth
         function nextPhoto() {
             const list = CONFIG.reward1.photos;
             state.galleryIndex = (state.galleryIndex + 1) % list.length;
@@ -719,7 +732,6 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             const container = document.getElementById("wordsearch-grid");
             container.innerHTML = "";
 
-            // Custom multi-directional grid with diagonal/backwards paths
             const rawMap = [
                 ['Y', 'G', 'L', 'Y', 'G', 'A', 'N', 'X', 'P', 'B'],
                 ['S', 'O', 'E', 'E', 'T', 'P', 'E', 'Q', 'G', 'A'],
@@ -738,8 +750,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             for (let r = 0; r < dim; r++) {
                 for (let c = 0; c < dim; c++) {
                     const block = document.createElement("div");
-                    block.className = "aspect-square flex items-center justify-center text-xs font-extrabold bg-white border border-rose-100 rounded-lg cursor-pointer transition select-none active:scale-95";
-                    block.innerText = matrix[r][c];
+                    block.className = "aspect-square flex items-center justify-center text-xs font-extrabold rounded-lg cursor-pointer transition select-none active:scale-95 border";
                     block.dataset.row = r;
                     block.dataset.col = c;
                     
@@ -747,7 +758,30 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                     container.appendChild(block);
                 }
             }
+            updateGridCellStyles();
             updateWordsList();
+        }
+
+        function updateGridCellStyles() {
+            const cells = document.querySelectorAll("#wordsearch-grid div");
+            cells.forEach(cell => {
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+                cell.innerText = matrix[r][c];
+
+                const isSelected = state.selectedCells.some(item => item.r === r && item.c === c);
+                const isFound = state.foundCells.some(item => item.r === r && item.c === c);
+
+                cell.className = "aspect-square flex items-center justify-center text-xs font-extrabold rounded-lg cursor-pointer transition select-none active:scale-95 border";
+
+                if (isSelected) {
+                    cell.classList.add("bg-rose-500", "text-white", "border-rose-600");
+                } else if (isFound) {
+                    cell.classList.add("bg-rose-50/50", "text-slate-400", "border-rose-100", "line-through", "decoration-rose-500", "decoration-[3px]");
+                } else {
+                    cell.classList.add("bg-white", "text-slate-800", "border-rose-100");
+                }
+            });
         }
 
         function updateWordsList() {
@@ -762,8 +796,8 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 qBox.className = "space-y-1";
 
                 const header = document.createElement("div");
-                header.className = "flex justify-between items-center text-xs font-semibold text-slate-700";
-                header.innerHTML = `<span>${q.text}</span> <span class="${matched ? 'text-emerald-500' : 'text-slate-400'}">${matched ? 'Found!' : 'Searching...'}</span>`;
+                header.className = `flex justify-between items-center text-xs font-semibold text-slate-700 transition duration-300 ${matched ? 'line-through decoration-rose-600 decoration-[3px] text-slate-400 opacity-60' : ''}`;
+                header.innerHTML = `<span>${q.text}</span> <span class="${matched ? 'text-emerald-500 font-bold' : 'text-slate-400'}">${matched ? 'Found!' : 'Searching...'}</span>`;
 
                 const pBarBg = document.createElement("div");
                 pBarBg.className = "w-full h-1.5 bg-slate-100 rounded-full overflow-hidden";
@@ -789,13 +823,11 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
 
             if (lookupIndex > -1) {
                 state.selectedCells.splice(lookupIndex, 1);
-                blockElement.classList.remove("bg-rose-500", "text-white");
-                blockElement.classList.add("bg-white");
             } else {
                 state.selectedCells.push({ r, c, val: matrix[r][c] });
-                blockElement.classList.remove("bg-white");
-                blockElement.classList.add("bg-rose-500", "text-white");
             }
+
+            updateGridCellStyles();
 
             const activeString = state.selectedCells.map(cell => cell.val).join("");
             const invertedString = activeString.split("").reverse().join("");
@@ -804,20 +836,18 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 const query = q.key.toUpperCase();
                 if ((activeString === query || invertedString === query) && !state.foundWords.includes(query)) {
                     state.foundWords.push(query);
+                    state.selectedCells.forEach(cell => {
+                        if (!state.foundCells.some(f => f.r === cell.r && f.c === cell.c)) {
+                            state.foundCells.push({ r: cell.r, c: cell.c });
+                        }
+                    });
+                    
                     saveProgress();
                     triggerWordSuccessAnimation();
-                    resetWordHighlights();
+                    state.selectedCells = [];
+                    updateGridCellStyles();
                     updateWordsList();
                 }
-            });
-        }
-
-        function resetWordHighlights() {
-            state.selectedCells = [];
-            const cells = document.querySelectorAll("#wordsearch-grid div");
-            cells.forEach(c => {
-                c.classList.remove("bg-rose-500", "text-white");
-                c.classList.add("bg-white");
             });
         }
 
@@ -845,7 +875,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 if (i < textSource.length) {
                     paragraph.innerText += textSource.charAt(i);
                     i++;
-                    setTimeout(autoTyping, 20); // Faster pace to accommodate the longer letter
+                    setTimeout(autoTyping, 20); 
                 }
             }
             autoTyping();
@@ -945,18 +975,27 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
             document.getElementById("final-gift-reveal").classList.add("hidden");
             document.getElementById("grand-finale-content").classList.remove("hidden");
             launchEndEffects();
+            
+            const rawFileUrl = CONFIG.reward3.audioFileUrl;
+            const directStreamUrl = convertDriveUrl(rawFileUrl);
+            
+            state.songAudio.src = directStreamUrl;
+            state.songAudio.load();
         }
 
         function initAudio() {
-            document.getElementById("audio-cover").src = CONFIG.reward3.coverArt;
+            const rawArtUrl = CONFIG.reward3.coverArt;
+            document.getElementById("audio-cover").src = convertDriveUrl(rawArtUrl);
             document.getElementById("song-lyrics").innerText = CONFIG.reward3.lyrics;
             document.getElementById("grand-finale-text").innerText = CONFIG.reward3.grandFinaleText;
             document.getElementById("download-song-link").href = CONFIG.reward3.audioFolderUrl;
 
-            state.songAudio = new Audio(CONFIG.reward3.audioFileUrl);
+            state.songAudio = new Audio();
             state.songAudio.addEventListener("timeupdate", () => {
-                const ratio = (state.songAudio.currentTime / state.songAudio.duration) * 100;
-                document.getElementById("track-progress").style.width = `${ratio}%`;
+                if (state.songAudio.duration) {
+                    const ratio = (state.songAudio.currentTime / state.songAudio.duration) * 100;
+                    document.getElementById("track-progress").style.width = `${ratio}%`;
+                }
                 
                 const min = Math.floor(state.songAudio.currentTime / 60);
                 const sec = Math.floor(state.songAudio.currentTime % 60).toString().padStart(2, '0');
@@ -973,7 +1012,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
         function toggleSong() {
             globalAudio.pause(); // Mute background loops
 
-            if (!state.songAudio) return;
+            if (!state.songAudio.src) return;
 
             if (state.audioPlaying) {
                 state.songAudio.pause();
@@ -981,7 +1020,10 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
                 document.getElementById("play-icon").classList.remove("hidden");
                 document.getElementById("pause-icon").classList.add("hidden");
             } else {
-                state.songAudio.play();
+                state.songAudio.play().catch(e => {
+                    console.error("Playback restriction:", e);
+                    alert("Since the browser restricts direct playback of Telegram links, please click the direct Telegram button below to listen or download your song!");
+                });
                 state.audioPlaying = true;
                 document.getElementById("play-icon").classList.add("hidden");
                 document.getElementById("pause-icon").classList.remove("hidden");
@@ -989,7 +1031,7 @@ And love, I’m holding on to you like my heart’s own heartbeat.`
         }
 
         function seekAudio(event) {
-            if (!state.songAudio) return;
+            if (!state.songAudio || !state.songAudio.duration) return;
             const bar = document.getElementById("track-bar");
             const size = bar.getBoundingClientRect();
             const clickPos = (event.clientX - size.left) / size.width;
